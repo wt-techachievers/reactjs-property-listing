@@ -32,6 +32,14 @@
   }
 }
 
+#map {
+  position:absolute;
+  left:25%;
+  top:0;
+  bottom:0;
+  width: 75%;
+  }
+
 .map-overlay {
   position: absolute;
   width: 25%;

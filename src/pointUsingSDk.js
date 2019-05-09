@@ -1,30 +1,34 @@
 import React, { Component } from 'react'
 
 class PointUsingSDk extends Component {
-    filterInput = document.getElementById('feature-filter');
-    listingEl = document.getElementById('feature-listing');
-    popup = new window.mapboxgl.Popup({
+    state={
+        popup: new window.mapboxgl.Popup({
             closeButton: false
-    });
+        }),
+        dataFeatures: [],
+        markers:[]
+    }
 
-    renderListings(features,map) {
+
+
+    renderListings = (features) => {
         // Clear any existing listings
         this.listingEl.innerHTML = '';
         if (features.length) {
-        features.forEach(function(feature) {
-        var prop = feature.properties;
-        var item = document.createElement('a');
-        item.href = prop.wikipedia;
-        item.target = '_blank';
-        item.textContent = prop.name + ' (' + prop.abbrev + ')';
-        item.addEventListener('mouseover', function() {
-            // Highlight corresponding feature on the map
-            this.popup.setLngLat(feature.geometry.coordinates)
-            .setText(feature.properties.name + ' (' + feature.properties.abbrev + ')')
-            .addTo(map);
-        });
-        this.listingEl.appendChild(item);
-        });
+            let self = this;
+            features.forEach(function(feature) {
+                var prop = feature.properties;
+                var item = document.createElement('a');
+                item.target = '_blank';
+                item.textContent = prop.title;
+                item.addEventListener('mouseover', function() {
+                    // Highlight corresponding feature on the map
+                    self.state.popup.setLngLat(feature.geometry.coordinates)
+                    .setText(feature.properties.title)
+                    .addTo(self.map);
+                });
+                self.listingEl.appendChild(item);
+            });
          
         // Show the filter input
         this.filterInput.parentNode.style.display = 'block';
@@ -37,33 +41,74 @@ class PointUsingSDk extends Component {
         this.filterInput.parentNode.style.display = 'none';
          
         // remove features filter
-        map.setFilter('airport', ['has', 'abbrev']);
+        this.map.setFilter('real_estate', ['has', 'title']);
         }
     }
-    normalize(string) {
+    normalize = (string) => {
         return string.trim().toLowerCase();
     }
 
+    searchLocation = (e)=>{
+        var value = this.normalize(e.target.value.trim());
+        const self =this;
+        //this.map.setLayoutProperty("real_estate", 'visibility', "real_estate".indexOf(value) > -1 ? 'visible' : 'none');
+        let filtered = this.state.dataFeatures.filter(function(feature) {
+            var name = self.normalize(feature.properties.title);
+            let result = name.indexOf(value) > -1;
+            let marker_action={marker_obj:undefined,add:true};
+            for(let marker of self.state.markers){
+                if(name && marker._lngLat.lat===feature.geometry.coordinates[1] && 
+                    marker._lngLat.lng===feature.geometry.coordinates[0]){
+                        if(!result){
+                            marker.remove();
+                        }else{
+                            marker_action.marker_obj = marker;
+                        }
+                    marker_action.add = false;
+                    break;
+                }
+            }
+            if(marker_action.add){
+                new window.mapboxgl.Marker()
+                        .setLngLat(feature.geometry.coordinates)
+                        .setPopup(new window.mapboxgl.Popup({ offset: 25 })
+                        .setText(feature.properties.description))
+                        .addTo(self.map);
+            }
+            return name.indexOf(value) > -1 ;
+        });
+        
+        // Populate the sidebar with filtered results
+        this.renderListings(filtered);
+        if(filtered){
+            // Set the filter to populate features into the layer.
+            this.map.setFilter('real_estate', ['match', ['get', 'title'], filtered.map(function(feature) {
+                return feature.properties.title;
+            }), true, false]);
+        }
+    }
+
     componentDidMount(){
+        const self = this;
+        let dataSource={};
+        const layerID = "real_estate";
+
         window.mapboxgl.accessToken = 'pk.eyJ1IjoiY2hpbnRhbnNvbmkxIiwiYSI6ImNqdmMxOHh1MzFkeWk0NG15bWJlbDYwN2sifQ.MT1hxtqXFw4QAXZ8MyfzCQ';
-        var map = new window.mapboxgl.Map({
+        self.map = new window.mapboxgl.Map({
             container: 'map',
             style: 'mapbox://styles/mapbox/streets-v11',
             center: [72.772955, 21.164358],
             zoom: 12
         });
-        let dataSource={};
-        const layerID = "real_estate";
-        let dataFeatures = [];
 
-        map.on('load', function () {
+        self.map.on('load', function () {
             
-            map.addSource("map_test_dataset", {
+            self.map.addSource("map_test_dataset", {
                 type: "vector",
                 url: "mapbox://chintansoni1.cjvc66bop17sa2wo0b3iiadyg-2xr3r"
             });
 
-            map.addLayer({
+            self.map.addLayer({
                 'id': layerID,
                 'type': 'circle',
                 'source': 'map_test_dataset',
@@ -83,84 +128,41 @@ class PointUsingSDk extends Component {
                 }
             });
             
-            
-            dataSource = map.getSource('map_test_dataset');
-            //console.log(dataSource._eventedParent._source);
-            // setTimeout(function(){
-            //     console.log(map.isSourceLoaded('test_dataset'));
-            //     let source = dataSource._eventedParent._source.bounds;
-            //     console.log(dataSource._eventedParent._source.bounds);
-            //     for(let index=0;index<source.length;index=index+2){
-            //         new window.mapboxgl.Marker()
-            //         .setLngLat([source[index],source[index+1]])
-            //         .addTo(map);
-            //     }
-                
-            // },500);
-            // function onSourceLoad(res){
-            //     if(dataSource._eventedParent._source.bounds){
-                    
-            //         let source = dataSource._eventedParent._source.bounds;
-            //         for(let index=0;index<source.length;index=index+2){
-            //             new window.mapboxgl.Marker()
-            //             .setLngLat([source[index],source[index+1]])
-            //             .setPopup(new window.mapboxgl.Popup({ offset: 25 })
-            //                     .setText('Construction on the Washington Monument began in 1848.'))
-            //             .addTo(map);
-            //         }
-            //         map.off('sourcedata',onSourceLoad);
-            //     }
-            // }
-            // map.on('sourcedata', onSourceLoad);
-            
-            me.filterInput.addEventListener('keyup', function(e) {
-                // If the input value matches a layerID set
-                // it's visibility to 'visible' or else hide it.
-                    var value = this.normalize(e.target.value.trim());
-                    map.setLayoutProperty(layerID, 'visibility',
-                                            layerID.indexOf(value) > -1 ? 'visible' : 'none');
+            self.map.on('moveend', function() {
+                var features = self.map.queryRenderedFeatures({layers:[layerID]});
+                 
+                if (features) {
+                // Populate features for the listing overlay.
+                self.renderListings(features);
+                 
+                // Clear the input container
+                self.filterInput.value = '';
+                 
+                // Store the current features in sn `airports` variable to
+                // later use for filtering on `keyup`.
+                self.dataFeatures = features;
+                }
             });
-            
+
+            dataSource = self.map.getSource('map_test_dataset');
+            self.filterInput = document.getElementById('feature-filter');
+            self.listingEl = document.getElementById('feature-listing');
+            self.renderListings([]);
         });
 
         
 
-        map.once('idle',function(){
-            let dataSource = map.querySourceFeatures("map_test_dataset",{sourceLayer:"test_dataset"});
-            console.log(dataSource);
-            dataFeatures = dataSource;
+        self.map.once('idle',function(){
+            let dataSource = self.map.querySourceFeatures("map_test_dataset",{sourceLayer:"test_dataset"});
+            self.state.dataFeatures = dataSource;
             for(let index=0;index<dataSource.length;index++){
-                new window.mapboxgl.Marker()
+                self.state.markers.push(new window.mapboxgl.Marker()
                 .setLngLat(dataSource[index].geometry.coordinates)
                 .setPopup(new window.mapboxgl.Popup({ offset: 25 })
                         .setText(dataSource[index]['properties']['description']))
-                .addTo(map);
+                .addTo(self.map));
                // map.setFilter(layerID, ['in', 'title', dataSource[index]['properties']['title']]);
             }
-            // function forwardGeocoder(query) {
-            //     var matchingFeatures = [];
-            //     for (var i = 0; i < dataSource.length; i++) {
-            //     var feature = dataSource[i];
-            //     // handle queries with different capitalization than the source data by calling toLowerCase()
-            //     if (feature.properties.title.toLowerCase().search(query.toLowerCase()) !== -1) {
-            //     // add a tree emoji as a prefix for custom data results
-            //     // using carmen geojson format: https://github.com/mapbox/carmen/blob/master/carmen-geojson.md
-            //     feature['place_name'] = '🌲 ' + feature.properties.title;
-            //     feature['center'] = feature.geometry.coordinates;
-            //     feature['place_type'] = ['park'];
-            //     matchingFeatures.push(feature);
-            //     }
-            //     }
-            //     return matchingFeatures;
-            // }
-
-            // map.addControl(new window.MapboxGeocoder({
-            //     accessToken: window.mapboxgl.accessToken,
-            //     localGeocoder: forwardGeocoder,
-            //     zoom: 14,
-            //     placeholder: "Enter search e.g. Lincoln Park",
-            //     mapboxgl: window.mapboxgl
-            // }));
         });
         
         
@@ -172,7 +174,7 @@ class PointUsingSDk extends Component {
                 <div id='map'></div>
                 <div className='map-overlay'>
                     <fieldset>
-                        <input id='feature-filter' type='text' placeholder='Filter results by name' />
+                        <input id='feature-filter' onKeyUp={this.searchLocation} type='text' placeholder='Filter results by name' />
                     </fieldset>
                 <div id='feature-listing' className='listing'></div>
                 </div>
