@@ -5,11 +5,13 @@ class PointUsingSDk extends Component {
         popup: new window.mapboxgl.Popup({
             closeButton: false
         }),
-        dataFeatures: [],
-        markers:[]
+        dataFeatures: []
     }
 
-
+    constructor(){
+        super();
+        this.markers= [];
+    }
 
     renderListings = (features) => {
         // Clear any existing listings
@@ -49,31 +51,34 @@ class PointUsingSDk extends Component {
     }
 
     searchLocation = (e)=>{
+        e.preventDefault();
         var value = this.normalize(e.target.value.trim());
         const self =this;
         //this.map.setLayoutProperty("real_estate", 'visibility', "real_estate".indexOf(value) > -1 ? 'visible' : 'none');
         let filtered = this.state.dataFeatures.filter(function(feature) {
             var name = self.normalize(feature.properties.title);
             let result = name.indexOf(value) > -1;
-            let marker_action={marker_obj:undefined,add:true};
-            for(let marker of self.state.markers){
-                if(name && marker._lngLat.lat===feature.geometry.coordinates[1] && 
-                    marker._lngLat.lng===feature.geometry.coordinates[0]){
+            let marker_add=true;
+            for (let index = self.markers.length - 1; index >= 0; index --) {
+                if(self.markers[index]._lngLat.lat===feature.geometry.coordinates[1] && 
+                    self.markers[index]._lngLat.lng===feature.geometry.coordinates[0]){
                         if(!result){
-                            marker.remove();
-                        }else{
-                            marker_action.marker_obj = marker;
+                            self.markers[index].remove();
+                            self.markers= self.markers.filter(function(value, marker_index){
+                                return index!== marker_index;
+                            });
+                            console.log(self.markers.length);
                         }
-                    marker_action.add = false;
+                        marker_add = false;
                     break;
                 }
             }
-            if(marker_action.add){
-                new window.mapboxgl.Marker()
+            if(marker_add){
+                self.markers.push(new window.mapboxgl.Marker()
                         .setLngLat(feature.geometry.coordinates)
                         .setPopup(new window.mapboxgl.Popup({ offset: 25 })
                         .setText(feature.properties.description))
-                        .addTo(self.map);
+                        .addTo(self.map));
             }
             return name.indexOf(value) > -1 ;
         });
@@ -86,6 +91,7 @@ class PointUsingSDk extends Component {
                 return feature.properties.title;
             }), true, false]);
         }
+        console.log("search end");
     }
 
     componentDidMount(){
@@ -128,35 +134,61 @@ class PointUsingSDk extends Component {
                 }
             });
             
-            self.map.on('moveend', function() {
-                var features = self.map.queryRenderedFeatures({layers:[layerID]});
+            // self.map.on('moveend', function() {
+            //     var features = self.map.queryRenderedFeatures({layers:[layerID]});
                  
-                if (features) {
-                // Populate features for the listing overlay.
-                self.renderListings(features);
+            //     if (features) {
+            //     // Populate features for the listing overlay.
+            //     self.renderListings(features);
                  
-                // Clear the input container
-                self.filterInput.value = '';
+            //     // Clear the input container
+            //     self.filterInput.value = '';
                  
-                // Store the current features in sn `airports` variable to
-                // later use for filtering on `keyup`.
-                self.dataFeatures = features;
-                }
-            });
+            //     // Store the current features in sn `airports` variable to
+            //     // later use for filtering on `keyup`.
+            //     self.dataFeatures = features;
+            //     }
+            // });
 
-            dataSource = self.map.getSource('map_test_dataset');
-            self.filterInput = document.getElementById('feature-filter');
-            self.listingEl = document.getElementById('feature-listing');
-            self.renderListings([]);
+            // dataSource = self.map.getSource('map_test_dataset');
+            // self.filterInput = document.getElementById('feature-filter');
+            // self.listingEl = document.getElementById('feature-listing');
+            // self.renderListings([]);
+
+            function forwardGeocoder(query) {
+                var matchingFeatures = [];
+                for (var i = 0; i < self.state.dataFeatures.length; i++) {
+                    var feature = self.state.dataFeatures[i];
+                    // handle queries with different capitalization than the source data by calling toLowerCase()
+                    if (feature.properties.title.toLowerCase().search(query.toLowerCase()) !== -1) {
+                        // add a tree emoji as a prefix for custom data results
+                        // using carmen geojson format: https://github.com/mapbox/carmen/blob/master/carmen-geojson.md
+                        feature['place_name'] = '🌲 ' + feature.properties.title;
+                        feature['center'] = feature.geometry.coordinates;
+                        feature['place_type'] = ['park'];
+                        matchingFeatures.push(feature);
+                    }
+                }
+                return matchingFeatures;
+            }
+                 
+            self.map.addControl(new window.MapboxGeocoder({
+                accessToken: window.mapboxgl.accessToken,
+                localGeocoder: forwardGeocoder,
+                zoom: 14,
+                placeholder: "Enter search e.g. Lincoln Park",
+                mapboxgl: window.mapboxgl
+            }));
         });
 
         
 
         self.map.once('idle',function(){
+            console.log("inside idle");
             let dataSource = self.map.querySourceFeatures("map_test_dataset",{sourceLayer:"test_dataset"});
             self.state.dataFeatures = dataSource;
             for(let index=0;index<dataSource.length;index++){
-                self.state.markers.push(new window.mapboxgl.Marker()
+                self.markers.push(new window.mapboxgl.Marker()
                 .setLngLat(dataSource[index].geometry.coordinates)
                 .setPopup(new window.mapboxgl.Popup({ offset: 25 })
                         .setText(dataSource[index]['properties']['description']))
@@ -172,12 +204,13 @@ class PointUsingSDk extends Component {
         return (
             <div>
                 <div id='map'></div>
-                <div className='map-overlay'>
+                {/* <div className='map-overlay'>
                     <fieldset>
                         <input id='feature-filter' onKeyUp={this.searchLocation} type='text' placeholder='Filter results by name' />
                     </fieldset>
                 <div id='feature-listing' className='listing'></div>
-                </div>
+                </div> */}
+
             </div>
         )
     }
