@@ -24,26 +24,26 @@ class PointUsingSDk extends Component {
                 item.target = '_blank';
                 item.textContent = prop.title;
                 item.addEventListener('mouseover', function() {
+                    self.map.flyTo({
+                        center:feature.geometry.coordinates 
+                    });
                     // Highlight corresponding feature on the map
                     self.state.popup.setLngLat(feature.geometry.coordinates)
                     .setText(feature.properties.title)
                     .addTo(self.map);
+                });
+                item.addEventListener('mouseout', function() {
+                    self.map.flyTo({
+                        center:[72.772955, 21.164358],
+                        zoom: 12
+                    });
+                    self.state.popup.remove();
                 });
                 self.listingEl.appendChild(item);
             });
          
         // Show the filter input
         this.filterInput.parentNode.style.display = 'block';
-        } else {
-        var empty = document.createElement('p');
-        empty.textContent = 'Drag the map to populate results';
-        this.listingEl.appendChild(empty);
-         
-        // Hide the filter input
-        this.filterInput.parentNode.style.display = 'none';
-         
-        // remove features filter
-        this.map.setFilter('real_estate', ['has', 'title']);
         }
     }
     normalize = (string) => {
@@ -51,36 +51,35 @@ class PointUsingSDk extends Component {
     }
 
     searchLocation = (e)=>{
-        e.preventDefault();
         var value = this.normalize(e.target.value.trim());
         const self =this;
         //this.map.setLayoutProperty("real_estate", 'visibility', "real_estate".indexOf(value) > -1 ? 'visible' : 'none');
         let filtered = this.state.dataFeatures.filter(function(feature) {
             var name = self.normalize(feature.properties.title);
             let result = name.indexOf(value) > -1;
-            let marker_add=true;
-            for (let index = self.markers.length - 1; index >= 0; index --) {
-                if(self.markers[index]._lngLat.lat===feature.geometry.coordinates[1] && 
-                    self.markers[index]._lngLat.lng===feature.geometry.coordinates[0]){
-                        if(!result){
-                            self.markers[index].remove();
-                            self.markers= self.markers.filter(function(value, marker_index){
-                                return index!== marker_index;
-                            });
-                            console.log(self.markers.length);
-                        }
-                        marker_add = false;
-                    break;
-                }
-            }
-            if(marker_add){
-                self.markers.push(new window.mapboxgl.Marker()
-                        .setLngLat(feature.geometry.coordinates)
-                        .setPopup(new window.mapboxgl.Popup({ offset: 25 })
-                        .setText(feature.properties.description))
-                        .addTo(self.map));
-            }
-            return name.indexOf(value) > -1 ;
+            // let marker_add=true;
+            // for (let index = self.markers.length - 1; index >= 0; index --) {
+            //     if(self.markers[index]._lngLat.lat===feature.geometry.coordinates[1] && 
+            //         self.markers[index]._lngLat.lng===feature.geometry.coordinates[0]){
+            //             if(!result){
+            //                 self.markers[index].remove();
+            //                 self.markers= self.markers.filter(function(value, marker_index){
+            //                     return index!== marker_index;
+            //                 });
+            //                 console.log(self.markers.length);
+            //             }
+            //             marker_add = false;
+            //         break;
+            //     }
+            // }
+            // if(marker_add){
+            //     self.markers.push(new window.mapboxgl.Marker()
+            //             .setLngLat(feature.geometry.coordinates)
+            //             .setPopup(new window.mapboxgl.Popup({ offset: 25 })
+            //             .setText(feature.properties.description))
+            //             .addTo(self.map));
+            // }
+            return result;
         });
         
         // Populate the sidebar with filtered results
@@ -91,7 +90,6 @@ class PointUsingSDk extends Component {
                 return feature.properties.title;
             }), true, false]);
         }
-        console.log("search end");
     }
 
     componentDidMount(){
@@ -111,89 +109,128 @@ class PointUsingSDk extends Component {
             
             self.map.addSource("map_test_dataset", {
                 type: "vector",
-                url: "mapbox://chintansoni1.cjvc66bop17sa2wo0b3iiadyg-2xr3r"
+                url: "mapbox://chintansoni1.cjvc66bop17sa2wo0b3iiadyg-7k8vw"
             });
 
-            self.map.addLayer({
-                'id': layerID,
-                'type': 'circle',
-                'source': 'map_test_dataset',
-                'source-layer':"test_dataset",
-                'paint': {
-                    // make circles larger as the user zooms from z12 to z22
-                    'circle-radius': {
-                    'base': 1.75,
-                    'stops': [[12, 2], [22, 180]]
-                },
-                // color circles by ethnicity, using a match expression
-                // https://docs.mapbox.com/mapbox-gl-js/style-spec/#expressions-match
-                'circle-color': '#00e600',
-                'circle-radius':5,
-                'circle-stroke-width':5,
-                'circle-stroke-color':'#000'
-                }
-            });
-            
-            // self.map.on('moveend', function() {
-            //     var features = self.map.queryRenderedFeatures({layers:[layerID]});
-                 
-            //     if (features) {
-            //     // Populate features for the listing overlay.
-            //     self.renderListings(features);
-                 
-            //     // Clear the input container
-            //     self.filterInput.value = '';
-                 
-            //     // Store the current features in sn `airports` variable to
-            //     // later use for filtering on `keyup`.
-            //     self.dataFeatures = features;
+            // self.map.addLayer({
+            //     'id': layerID,
+            //     'type': 'circle',
+            //     'source': 'map_test_dataset',
+            //     'source-layer':"test_dataset",
+            //     'paint': {
+            //         // make circles larger as the user zooms from z12 to z22
+            //         'circle-radius': {
+            //         'base': 1.75,
+            //         'stops': [[12, 2], [22, 180]]
+            //     },
+            //     // color circles by ethnicity, using a match expression
+            //     // https://docs.mapbox.com/mapbox-gl-js/style-spec/#expressions-match
+            //     'circle-color': '#00e600',
+            //     'circle-radius':5,
+            //     'circle-stroke-width':5,
+            //     'circle-stroke-color':'#000'
             //     }
             // });
 
-            // dataSource = self.map.getSource('map_test_dataset');
-            // self.filterInput = document.getElementById('feature-filter');
-            // self.listingEl = document.getElementById('feature-listing');
-            // self.renderListings([]);
-
-            function forwardGeocoder(query) {
-                var matchingFeatures = [];
-                for (var i = 0; i < self.state.dataFeatures.length; i++) {
-                    var feature = self.state.dataFeatures[i];
-                    // handle queries with different capitalization than the source data by calling toLowerCase()
-                    if (feature.properties.title.toLowerCase().search(query.toLowerCase()) !== -1) {
-                        // add a tree emoji as a prefix for custom data results
-                        // using carmen geojson format: https://github.com/mapbox/carmen/blob/master/carmen-geojson.md
-                        feature['place_name'] = '🌲 ' + feature.properties.title;
-                        feature['center'] = feature.geometry.coordinates;
-                        feature['place_type'] = ['park'];
-                        matchingFeatures.push(feature);
+            self.map.loadImage('https://cdn1.iconfinder.com/data/icons/Map-Markers-Icons-Demo-PNG/256/Map-Marker-Marker-Outside-Azure.png', function(error, image) {
+                if (error) throw error;
+                self.map.addImage('marker', image);
+                self.map.addLayer({
+                    "id": layerID,
+                    "type": "symbol",
+                    "source": 'map_test_dataset',
+                    'source-layer':"new_dataset",
+                    "layout": {
+                        "icon-image": "marker",
+                        "icon-size": 0.2
                     }
-                }
-                return matchingFeatures;
-            }
+                });
+                
+                self.filterInput = document.getElementById('feature-filter');
+                self.listingEl = document.getElementById('feature-listing');
+               
+            });
+            
+            // self.map.on('moveend', function() {
+                
+            // });
+
+            
+
+            // function forwardGeocoder(query) {
+            //     var matchingFeatures = [];
+            //     for (var i = 0; i < self.state.dataFeatures.length; i++) {
+            //         var feature = self.state.dataFeatures[i];
+            //         // handle queries with different capitalization than the source data by calling toLowerCase()
+            //         if (feature.properties.title.toLowerCase().search(query.toLowerCase()) !== -1) {
+            //             // add a tree emoji as a prefix for custom data results
+            //             // using carmen geojson format: https://github.com/mapbox/carmen/blob/master/carmen-geojson.md
+            //             feature['place_name'] = feature.properties.title;
+            //             feature['center'] = feature.geometry.coordinates;
+            //             feature['place_type'] = ['customize'];
+            //             matchingFeatures.push(feature);
+            //         }
+            //     }
+            //     return matchingFeatures;
+            // }
+
+            // function renderGeocoder(query) {
+            //     let matched = false;
+            //     for (var i = 0; i < self.state.dataFeatures.length; i++) {
+            //         var feature = self.state.dataFeatures[i];
+            //         // handle queries with different capitalization than the source data by calling toLowerCase()
+            //         if (feature.properties.title.toLowerCase().search(query.place_name.toLowerCase()) !== -1) {
+            //             // add a tree emoji as a prefix for custom data results
+            //             // using carmen geojson format: https://github.com/mapbox/carmen/blob/master/carmen-geojson.md
+            //             matched = true;
+            //             break;
+            //         }
+            //     }
+            //     if(matched){
+            //         return "<div class='geocoder-dropdown-item'><span class='geocoder-dropdown-text'>" + feature.properties.title + "</span></div>";
+            //     }
+            //     else{
+            //         return "<div class='geocoder-dropdown-item' style='display:none;'></div>";
+            //     }
+            // }
                  
-            self.map.addControl(new window.MapboxGeocoder({
-                accessToken: window.mapboxgl.accessToken,
-                localGeocoder: forwardGeocoder,
-                zoom: 14,
-                placeholder: "Enter search e.g. Lincoln Park",
-                mapboxgl: window.mapboxgl
-            }));
+            // self.map.addControl(new window.MapboxGeocoder({
+            //     accessToken: window.mapboxgl.accessToken,
+            //     localGeocoder: forwardGeocoder,
+            //     zoom: 14,
+            //     render: renderGeocoder,
+            //     placeholder: "Enter search e.g. Home",
+            //     mapboxgl: window.mapboxgl
+            // }));
         });
 
         
 
         self.map.once('idle',function(){
-            console.log("inside idle");
-            let dataSource = self.map.querySourceFeatures("map_test_dataset",{sourceLayer:"test_dataset"});
-            self.state.dataFeatures = dataSource;
-            for(let index=0;index<dataSource.length;index++){
-                self.markers.push(new window.mapboxgl.Marker()
-                .setLngLat(dataSource[index].geometry.coordinates)
-                .setPopup(new window.mapboxgl.Popup({ offset: 25 })
-                        .setText(dataSource[index]['properties']['description']))
-                .addTo(self.map));
-               // map.setFilter(layerID, ['in', 'title', dataSource[index]['properties']['title']]);
+            // let dataSource = self.map.querySourceFeatures("map_test_dataset",{sourceLayer:"test_dataset"});
+            // self.state.dataFeatures = dataSource;
+            // for(let index=0;index<dataSource.length;index++){
+            //     self.markers.push(new window.mapboxgl.Marker()
+            //     .setLngLat(dataSource[index].geometry.coordinates)
+            //     .setPopup(new window.mapboxgl.Popup({ offset: 25 })
+            //             .setText(dataSource[index]['properties']['description']))
+            //     .addTo(self.map));
+            //    // map.setFilter(layerID, ['in', 'title', dataSource[index]['properties']['title']]);
+            // }
+           
+            var features = self.map.querySourceFeatures("map_test_dataset",{sourceLayer:"new_dataset"});
+            //var features = self.map.queryRenderedFeatures({ layers: ['real_estate'] });
+                 
+            if (features) {
+            // Populate features for the listing overlay.
+            self.renderListings(features);
+             
+            // Clear the input container
+            self.filterInput.value = '';
+             
+            // Store the current features in sn `airports` variable to
+            // later use for filtering on `keyup`.
+            self.state.dataFeatures = features;
             }
         });
         
@@ -204,12 +241,12 @@ class PointUsingSDk extends Component {
         return (
             <div>
                 <div id='map'></div>
-                {/* <div className='map-overlay'>
+                <div className='map-overlay'>
                     <fieldset>
                         <input id='feature-filter' onKeyUp={this.searchLocation} type='text' placeholder='Filter results by name' />
                     </fieldset>
-                <div id='feature-listing' className='listing'></div>
-                </div> */}
+                    <div id='feature-listing' className='listing'></div>
+                </div>
 
             </div>
         )
