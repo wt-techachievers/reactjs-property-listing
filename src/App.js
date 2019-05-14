@@ -1,23 +1,26 @@
-import React from 'react';
+import React, { Component } from 'react';
 import './App.css';
-import { BrowserRouter as Router, Route, Link } from "react-router-dom";
 
-import PointUsingSDk from './PointUsingSDk';
-import PointWithoutSDk from './PointWithoutSDK';
+import Routes from './Routes';
+import SideBar from './layout/SideBar';
+import Navbar from './layout/Navbar';
+import './index.css';
 
-function App() {
-  return (
-    <div>
-      <h1>Welome to mapbox react sample</h1>
-      
-      <Router>
-        <Link to="/map1">Select here to see map with SDK</Link>
-        <Link to="/map2">Select here to see map without SDK</Link><br/>
-        <Route path='/map1' component={PointUsingSDk}/>
-        <Route path='/map2' component={PointWithoutSDk}/>
-      </Router>
-    </div>
-  );
+class App extends Component {
+  render(){
+    return (
+        <div className="flexible-content">
+              <Navbar />
+              <SideBar />
+              <main id="content" className="p-2">
+                
+                  {/* <Link to="/map1">Select here to see map with SDK</Link>
+                  <Link to="/map2">Select here to see map without SDK</Link><br/> */}
+                  <Routes/>
+              </main>
+        </div>
+    );
+  }
 }
 
 export default App;

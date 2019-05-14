@@ -1,11 +1,14 @@
-import React, { Component } from 'react'
+import React, { Component } from 'react';
+import { CircleMode, DirectMode, SimpleSelectMode } from 'mapbox-gl-draw-circle';
+import {MDBBtn} from 'mdbreact';
 
 class PointUsingSDk extends Component {
     state={
         popup: new window.mapboxgl.Popup({
             closeButton: false
         }),
-        dataFeatures: []
+        dataFeatures: [],
+        draw:{}
     }
 
     constructor(){
@@ -13,83 +16,102 @@ class PointUsingSDk extends Component {
         this.markers= [];
     }
 
-    renderListings = (features) => {
-        // Clear any existing listings
-        this.listingEl.innerHTML = '';
-        if (features.length) {
-            let self = this;
-            features.forEach(function(feature) {
-                var prop = feature.properties;
-                var item = document.createElement('a');
-                item.target = '_blank';
-                item.textContent = prop.title;
-                item.addEventListener('mouseover', function() {
-                    self.map.flyTo({
-                        center:feature.geometry.coordinates 
-                    });
-                    // Highlight corresponding feature on the map
-                    self.state.popup.setLngLat(feature.geometry.coordinates)
-                    .setText(feature.properties.title)
-                    .addTo(self.map);
-                });
-                item.addEventListener('mouseout', function() {
-                    self.map.flyTo({
-                        center:[72.772955, 21.164358],
-                        zoom: 12
-                    });
-                    self.state.popup.remove();
-                });
-                self.listingEl.appendChild(item);
-            });
+    // renderListings = (features) => {
+    //     // Clear any existing listings
+    //     this.listingEl.innerHTML = '';
+    //     if (features.length) {
+    //         let self = this;
+    //         features.forEach(function(feature) {
+    //             var prop = feature.properties;
+    //             var item = document.createElement('a');
+    //             item.target = '_blank';
+    //             item.textContent = prop.title;
+    //             item.addEventListener('mouseover', function() {
+    //                 self.map.flyTo({
+    //                     center:feature.geometry.coordinates 
+    //                 });
+    //                 // Highlight corresponding feature on the map
+    //                 self.state.popup.setLngLat(feature.geometry.coordinates)
+    //                 .setText(feature.properties.title)
+    //                 .addTo(self.map);
+    //             });
+    //             item.addEventListener('mouseout', function() {
+    //                 self.map.flyTo({
+    //                     center:[72.772955, 21.164358],
+    //                     zoom: 12
+    //                 });
+    //                 self.state.popup.remove();
+    //             });
+    //             self.listingEl.appendChild(item);
+    //         });
          
-        // Show the filter input
-        this.filterInput.parentNode.style.display = 'block';
+    //     // Show the filter input
+    //     this.filterInput.parentNode.style.display = 'block';
+    //     }
+    // }
+    // normalize = (string) => {
+    //     return string.trim().toLowerCase();
+    // }
+
+    // searchLocation = (e)=>{
+    //     var value = this.normalize(e.target.value.trim());
+    //     const self =this;
+    //     //this.map.setLayoutProperty("real_estate", 'visibility', "real_estate".indexOf(value) > -1 ? 'visible' : 'none');
+    //     let filtered = this.state.dataFeatures.filter(function(feature) {
+    //         var name = self.normalize(feature.properties.title);
+    //         let result = name.indexOf(value) > -1;
+    //         // let marker_add=true;
+    //         // for (let index = self.markers.length - 1; index >= 0; index --) {
+    //         //     if(self.markers[index]._lngLat.lat===feature.geometry.coordinates[1] && 
+    //         //         self.markers[index]._lngLat.lng===feature.geometry.coordinates[0]){
+    //         //             if(!result){
+    //         //                 self.markers[index].remove();
+    //         //                 self.markers= self.markers.filter(function(value, marker_index){
+    //         //                     return index!== marker_index;
+    //         //                 });
+    //         //                 console.log(self.markers.length);
+    //         //             }
+    //         //             marker_add = false;
+    //         //         break;
+    //         //     }
+    //         // }
+    //         // if(marker_add){
+    //         //     self.markers.push(new window.mapboxgl.Marker()
+    //         //             .setLngLat(feature.geometry.coordinates)
+    //         //             .setPopup(new window.mapboxgl.Popup({ offset: 25 })
+    //         //             .setText(feature.properties.description))
+    //         //             .addTo(self.map));
+    //         // }
+    //         return result;
+    //     });
+        
+    //     // Populate the sidebar with filtered results
+    //     this.renderListings(filtered);
+    //     if(filtered){
+    //         // Set the filter to populate features into the layer.
+    //         this.map.setFilter('real_estate', ['match', ['get', 'title'], filtered.map(function(feature) {
+    //             return feature.properties.title;
+    //         }), true, false]);
+    //     }
+    // }
+
+    updateArea = (e) => {
+        var data = this.state.draw.getAll();
+        var answer = document.getElementById('calculated-area');
+        if (data.features.length > 0) {
+            var area = window.turf.area(data);
+            let inside_circle = window.turf.inside(window.turf.point(this.state.dataFeatures[0].geometry.coordinates),data.features[0]);
+            // restrict to area to 2 decimal points
+            var rounded_area = Math.round(area*100)/100;
+            answer.innerHTML = '<p><strong>' + rounded_area +','+inside_circle+ '</strong></p><p>square meters</p>';
+        } else {
+            answer.innerHTML = '';
+            if (e.type !== 'draw.delete') alert("Use the draw tools to draw a polygon!");
         }
-    }
-    normalize = (string) => {
-        return string.trim().toLowerCase();
     }
 
-    searchLocation = (e)=>{
-        var value = this.normalize(e.target.value.trim());
-        const self =this;
-        //this.map.setLayoutProperty("real_estate", 'visibility', "real_estate".indexOf(value) > -1 ? 'visible' : 'none');
-        let filtered = this.state.dataFeatures.filter(function(feature) {
-            var name = self.normalize(feature.properties.title);
-            let result = name.indexOf(value) > -1;
-            // let marker_add=true;
-            // for (let index = self.markers.length - 1; index >= 0; index --) {
-            //     if(self.markers[index]._lngLat.lat===feature.geometry.coordinates[1] && 
-            //         self.markers[index]._lngLat.lng===feature.geometry.coordinates[0]){
-            //             if(!result){
-            //                 self.markers[index].remove();
-            //                 self.markers= self.markers.filter(function(value, marker_index){
-            //                     return index!== marker_index;
-            //                 });
-            //                 console.log(self.markers.length);
-            //             }
-            //             marker_add = false;
-            //         break;
-            //     }
-            // }
-            // if(marker_add){
-            //     self.markers.push(new window.mapboxgl.Marker()
-            //             .setLngLat(feature.geometry.coordinates)
-            //             .setPopup(new window.mapboxgl.Popup({ offset: 25 })
-            //             .setText(feature.properties.description))
-            //             .addTo(self.map));
-            // }
-            return result;
-        });
+    filterUsingCircle = () =>{
         
-        // Populate the sidebar with filtered results
-        this.renderListings(filtered);
-        if(filtered){
-            // Set the filter to populate features into the layer.
-            this.map.setFilter('real_estate', ['match', ['get', 'title'], filtered.map(function(feature) {
-                return feature.properties.title;
-            }), true, false]);
-        }
     }
 
     componentDidMount(){
@@ -146,8 +168,8 @@ class PointUsingSDk extends Component {
                     }
                 });
                 
-                self.filterInput = document.getElementById('feature-filter');
-                self.listingEl = document.getElementById('feature-listing');
+                // self.filterInput = document.getElementById('feature-filter');
+                // self.listingEl = document.getElementById('feature-listing');
                
             });
             
@@ -202,6 +224,27 @@ class PointUsingSDk extends Component {
             //     placeholder: "Enter search e.g. Home",
             //     mapboxgl: window.mapboxgl
             // }));
+            // self.state.draw = new window.MapboxDraw({
+            //     displayControlsDefault: false,
+            //     controls: {
+            //         circle: true,
+            //         trash: true
+            //     }
+            // });
+            self.state.draw = new window.MapboxDraw({
+                displayControlsDefault: false,
+                defaultMode: "draw_circle",
+                userProperties: true,
+                modes: {
+                  draw_circle: CircleMode,
+                  direct_select: DirectMode,
+                  simple_select: SimpleSelectMode
+                }
+              });
+            self.map.addControl(self.state.draw);
+            self.map.on('draw.create', self.updateArea);
+            self.map.on('draw.delete', self.updateArea);
+            self.map.on('draw.update', self.updateArea);
         });
 
         
@@ -223,10 +266,10 @@ class PointUsingSDk extends Component {
                  
             if (features) {
             // Populate features for the listing overlay.
-            self.renderListings(features);
+            //self.renderListings(features);
              
             // Clear the input container
-            self.filterInput.value = '';
+            //self.filterInput.value = '';
              
             // Store the current features in sn `airports` variable to
             // later use for filtering on `keyup`.
@@ -241,13 +284,17 @@ class PointUsingSDk extends Component {
         return (
             <div>
                 <div id='map'></div>
-                <div className='map-overlay'>
+                {/* <div className='map-overlay'>
                     <fieldset>
                         <input id='feature-filter' onKeyUp={this.searchLocation} type='text' placeholder='Filter results by name' />
                     </fieldset>
                     <div id='feature-listing' className='listing'></div>
+                </div> */}
+                <MDBBtn color="primary" style={ {position:'absolute', top:"10%", right:"20px"}} >Filter</MDBBtn>
+                <div className='calculation-box'>
+                    <p>Draw a polygon using the draw tools.</p>
+                    <div id='calculated-area'></div>
                 </div>
-
             </div>
         )
     }
