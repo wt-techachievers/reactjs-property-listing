@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
-import { CircleMode, DirectMode, SimpleSelectMode } from 'mapbox-gl-draw-circle';
+// First way to import
+import { ClipLoader } from 'react-spinners';
 import {MDBBtn} from 'mdbreact';
 
 class PointUsingSDk extends Component {
@@ -9,11 +10,6 @@ class PointUsingSDk extends Component {
         }),
         dataFeatures: [],
         draw:{}
-    }
-
-    constructor(){
-        super();
-        this.markers= [];
     }
 
     // renderListings = (features) => {
@@ -95,28 +91,8 @@ class PointUsingSDk extends Component {
     //     }
     // }
 
-    updateArea = (e) => {
-        var data = this.state.draw.getAll();
-        var answer = document.getElementById('calculated-area');
-        if (data.features.length > 0) {
-            var area = window.turf.area(data);
-            let inside_circle = window.turf.inside(window.turf.point(this.state.dataFeatures[0].geometry.coordinates),data.features[0]);
-            // restrict to area to 2 decimal points
-            var rounded_area = Math.round(area*100)/100;
-            answer.innerHTML = '<p><strong>' + rounded_area +','+inside_circle+ '</strong></p><p>square meters</p>';
-        } else {
-            answer.innerHTML = '';
-            if (e.type !== 'draw.delete') alert("Use the draw tools to draw a polygon!");
-        }
-    }
-
-    filterUsingCircle = () =>{
-        
-    }
-
     componentDidMount(){
         const self = this;
-        let dataSource={};
         const layerID = "real_estate";
 
         window.mapboxgl.accessToken = 'pk.eyJ1IjoiY2hpbnRhbnNvbmkxIiwiYSI6ImNqdmMxOHh1MzFkeWk0NG15bWJlbDYwN2sifQ.MT1hxtqXFw4QAXZ8MyfzCQ';
@@ -231,20 +207,7 @@ class PointUsingSDk extends Component {
             //         trash: true
             //     }
             // });
-            self.state.draw = new window.MapboxDraw({
-                displayControlsDefault: false,
-                defaultMode: "draw_circle",
-                userProperties: true,
-                modes: {
-                  draw_circle: CircleMode,
-                  direct_select: DirectMode,
-                  simple_select: SimpleSelectMode
-                }
-              });
-            self.map.addControl(self.state.draw);
-            self.map.on('draw.create', self.updateArea);
-            self.map.on('draw.delete', self.updateArea);
-            self.map.on('draw.update', self.updateArea);
+            
         });
 
         
@@ -275,28 +238,92 @@ class PointUsingSDk extends Component {
             // later use for filtering on `keyup`.
             self.state.dataFeatures = features;
             }
+            
+            
+            if(Object.entries(self.props.map).length === 0 && self.props.map.constructor === Object){
+                self.props.mapStateHandler(self.map);
+            }
+            else{
+                var draw = new window.MapboxDraw({
+                    displayControlsDefault: false,
+                    controls: {
+                    polygon: true,
+                    trash: true
+                    }
+                });
+                self.map.addControl(draw);
+                //console.log(self.map,self.props.map,self.compare({a:"a",b:{c:"c"}},{a:"a",b:{c:"c"}}));
+            }
+            
         });
         
         
     }
 
+    compare = (obj1, obj2) => {
+        //Loop through properties in object 1
+        for (var p in obj1) {
+            //Check property exists on both objects
+            if (obj1.hasOwnProperty(p) !== obj2.hasOwnProperty(p)) return false;
+     
+            switch (typeof (obj1[p])) {
+                //Deep compare objects
+                case 'object':
+                    if (!this.compare(obj1[p], obj2[p])) return false;
+                    break;
+                //Compare function code
+                case 'function':
+                    if (typeof (obj2[p]) == 'undefined' || (p != 'compare' && obj1[p].toString() != obj2[p].toString())) return false;
+                    break;
+                //Compare values
+                default:
+                    if (obj1[p] != obj2[p]) return false;
+            }
+        }
+     
+        //Check object 2 for any extra properties
+        for (var p in obj2) {
+            if (typeof (obj1[p]) == 'undefined') return false;
+        }
+        return true;
+    };
+
     render() {
-        return (
-            <div>
-                <div id='map'></div>
-                {/* <div className='map-overlay'>
-                    <fieldset>
-                        <input id='feature-filter' onKeyUp={this.searchLocation} type='text' placeholder='Filter results by name' />
-                    </fieldset>
-                    <div id='feature-listing' className='listing'></div>
-                </div> */}
-                <MDBBtn color="primary" style={ {position:'absolute', top:"10%", right:"20px"}} >Filter</MDBBtn>
-                <div className='calculation-box'>
-                    <p>Draw a polygon using the draw tools.</p>
-                    <div id='calculated-area'></div>
+        if(!(Object.entries(this.props.map).length === 0 && this.props.map.constructor === Object)){
+            return (
+                <div>
+                    <div id='map'></div>
+                    {/* <div className='map-overlay'>
+                        <fieldset>
+                            <input id='feature-filter' onKeyUp={this.searchLocation} type='text' placeholder='Filter results by name' />
+                        </fieldset>
+                        <div id='feature-listing' className='listing'></div>
+                    </div> */}
+                    <MDBBtn color="primary" style={ {position:'absolute', top:"10%", right:"20px"}} >Filter</MDBBtn>
+                    <div className='calculation-box'>
+                        <p>Draw a polygon using the draw tools.</p>
+                        <div id='calculated-area'></div>
+                    </div>
                 </div>
-            </div>
-        )
+            )
+        }
+        else{
+            return (
+                <div>
+                     <div id='map' style={{display:"none"}}></div>
+                     <div className='sweet-loading' style={{"marginLeft":"45%","marginTop":"20%"}}>
+                        <ClipLoader
+                            style={{display: "block",
+                                    margin: "0 auto"}}
+                            sizeUnit={"px"}
+                            size={150}
+                            color={'#123abc'}
+                            loading={true}
+                        />
+                </div> 
+                </div>
+              )
+        }
     }
 }
 

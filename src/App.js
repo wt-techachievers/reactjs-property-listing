@@ -7,19 +7,25 @@ import Navbar from './layout/Navbar';
 import './index.css';
 
 class App extends Component {
+  state={
+    map:{}
+  }
+
+  stateHandler = (mapObj) =>{
+    console.log(mapObj);
+    this.setState({map: mapObj});
+  }
+
   render(){
-    return (
-        <div className="flexible-content">
-              <Navbar />
-              <SideBar />
-              <main id="content" className="p-2">
-                
-                  {/* <Link to="/map1">Select here to see map with SDK</Link>
-                  <Link to="/map2">Select here to see map without SDK</Link><br/> */}
-                  <Routes/>
-              </main>
-        </div>
-    );
+      return (
+          <div className="flexible-content">
+                <Navbar />
+                <SideBar mapStateHandler={this.stateHandler} map={this.state.map} />
+                <main id="content" className="p-2">
+                  <Routes mapStateHandler={this.stateHandler} map={this.state.map}/>
+                </main>
+          </div>
+      );
   }
 }
 
