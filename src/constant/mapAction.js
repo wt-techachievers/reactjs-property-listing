@@ -1,0 +1,3 @@
+export const INITIALIZE_MAP = "INITIALIZE_MAP";
+export const SET_DATA_FEATURES = "SET_DATA_FEATURES";
+

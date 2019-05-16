@@ -1,5 +1,9 @@
 import React, { Component } from 'react';
 // First way to import
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
+import { initializeMap, setDataFeatures } from '../action/index';
+
 import { ClipLoader } from 'react-spinners';
 import {MDBBtn} from 'mdbreact';
 
@@ -7,9 +11,7 @@ class PointUsingSDk extends Component {
     state={
         popup: new window.mapboxgl.Popup({
             closeButton: false
-        }),
-        dataFeatures: [],
-        draw:{}
+        })
     }
 
     // renderListings = (features) => {
@@ -91,7 +93,20 @@ class PointUsingSDk extends Component {
     //     }
     // }
 
+    modifyClass = (element)=>{
+        let activeElement = element[0];
+        activeElement.classList.remove("active");
+        for( let element of activeElement.parentElement.children){
+            if(element.innerText === "Map with SDk"){
+                element.className += ' active';
+                return;
+            }
+        }    
+    }
+
     componentDidMount(){
+        let navbar = document.getElementsByClassName("nav-item active");
+        this.modifyClass(navbar);
         const self = this;
         const layerID = "real_estate";
 
@@ -236,12 +251,12 @@ class PointUsingSDk extends Component {
              
             // Store the current features in sn `airports` variable to
             // later use for filtering on `keyup`.
-            self.state.dataFeatures = features;
+            self.props.setDataFeatures({data_features:features});
             }
             
             
             if(Object.entries(self.props.map).length === 0 && self.props.map.constructor === Object){
-                self.props.mapStateHandler(self.map);
+                self.props.initializeMap({map:self.map});
             }
             else{
                 var draw = new window.MapboxDraw({
@@ -251,7 +266,7 @@ class PointUsingSDk extends Component {
                     trash: true
                     }
                 });
-                self.map.addControl(draw);
+                self.props.map.addControl(draw);
                 //console.log(self.map,self.props.map,self.compare({a:"a",b:{c:"c"}},{a:"a",b:{c:"c"}}));
             }
             
@@ -260,36 +275,9 @@ class PointUsingSDk extends Component {
         
     }
 
-    compare = (obj1, obj2) => {
-        //Loop through properties in object 1
-        for (var p in obj1) {
-            //Check property exists on both objects
-            if (obj1.hasOwnProperty(p) !== obj2.hasOwnProperty(p)) return false;
-     
-            switch (typeof (obj1[p])) {
-                //Deep compare objects
-                case 'object':
-                    if (!this.compare(obj1[p], obj2[p])) return false;
-                    break;
-                //Compare function code
-                case 'function':
-                    if (typeof (obj2[p]) == 'undefined' || (p != 'compare' && obj1[p].toString() != obj2[p].toString())) return false;
-                    break;
-                //Compare values
-                default:
-                    if (obj1[p] != obj2[p]) return false;
-            }
-        }
-     
-        //Check object 2 for any extra properties
-        for (var p in obj2) {
-            if (typeof (obj1[p]) == 'undefined') return false;
-        }
-        return true;
-    };
 
     render() {
-        if(!(Object.entries(this.props.map).length === 0 && this.props.map.constructor === Object)){
+        if(this.props.map){
             return (
                 <div>
                     <div id='map'></div>
@@ -299,9 +287,8 @@ class PointUsingSDk extends Component {
                         </fieldset>
                         <div id='feature-listing' className='listing'></div>
                     </div> */}
-                    <MDBBtn color="primary" style={ {position:'absolute', top:"10%", right:"20px"}} >Filter</MDBBtn>
+                    <MDBBtn color="primary" style={ {position:'absolute', top:"10%", right:"4%"}} >Filter</MDBBtn>
                     <div className='calculation-box'>
-                        <p>Draw a polygon using the draw tools.</p>
                         <div id='calculated-area'></div>
                     </div>
                 </div>
@@ -327,4 +314,18 @@ class PointUsingSDk extends Component {
     }
 }
 
-export default PointUsingSDk;
+PointUsingSDk.propTypes = {
+    map: PropTypes.object.isRequired,
+    initializeMap: PropTypes.func.isRequired,
+    setDataFeatures: PropTypes.func.isRequired
+}
+
+const mapStateToProps = (state) => ({
+    map: state.map,
+    data_features: state.data_features
+});
+ 
+export default connect(
+    mapStateToProps,
+    { initializeMap, setDataFeatures }
+)(PointUsingSDk);

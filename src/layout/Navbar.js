@@ -21,8 +21,8 @@ class Navbar extends Component {
     render() {
         return (
             <MDBNavbar className="flexible-navbar" light expand="md" scrolling>
-                <MDBNavbarBrand href="/">
-                    <strong>MDB</strong>
+                <MDBNavbarBrand >
+                    <strong>Mapbox</strong>
                 </MDBNavbarBrand>
                 <MDBNavbarToggler onClick = { this.onClick } />
                 <MDBCollapse isOpen = { this.state.collapse } navbar>
@@ -30,7 +30,7 @@ class Navbar extends Component {
                         <MDBNavItem active>
                             <MDBNavLink to="/">Home</MDBNavLink>
                         </MDBNavItem>
-                        <MDBNavItem>
+                        <MDBNavItem >
                             <MDBNavLink to="/map1">Map with SDk</MDBNavLink>
                         </MDBNavItem>
                         <MDBNavItem>

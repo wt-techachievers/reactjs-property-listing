@@ -20,9 +20,9 @@ class App extends Component {
       return (
           <div className="flexible-content">
                 <Navbar />
-                <SideBar mapStateHandler={this.stateHandler} map={this.state.map} />
+                <SideBar />
                 <main id="content" className="p-2">
-                  <Routes mapStateHandler={this.stateHandler} map={this.state.map}/>
+                  <Routes />
                 </main>
           </div>
       );
