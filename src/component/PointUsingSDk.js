@@ -3,6 +3,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { initializeMap, setDataFeatures } from '../action/index';
+import axios from 'axios';
 
 import { ClipLoader } from 'react-spinners';
 import {MDBBtn} from 'mdbreact';
@@ -104,6 +105,12 @@ class PointUsingSDk extends Component {
         }    
     }
 
+    activeSidebar = ()=>{
+        let sidebar = document.getElementsByClassName("sidebar-fixed")[0];
+        sidebar.querySelector("ul").style = "block";
+    }
+    
+
     componentDidMount(){
         let navbar = document.getElementsByClassName("nav-item active");
         this.modifyClass(navbar);
@@ -167,61 +174,6 @@ class PointUsingSDk extends Component {
             // self.map.on('moveend', function() {
                 
             // });
-
-            
-
-            // function forwardGeocoder(query) {
-            //     var matchingFeatures = [];
-            //     for (var i = 0; i < self.state.dataFeatures.length; i++) {
-            //         var feature = self.state.dataFeatures[i];
-            //         // handle queries with different capitalization than the source data by calling toLowerCase()
-            //         if (feature.properties.title.toLowerCase().search(query.toLowerCase()) !== -1) {
-            //             // add a tree emoji as a prefix for custom data results
-            //             // using carmen geojson format: https://github.com/mapbox/carmen/blob/master/carmen-geojson.md
-            //             feature['place_name'] = feature.properties.title;
-            //             feature['center'] = feature.geometry.coordinates;
-            //             feature['place_type'] = ['customize'];
-            //             matchingFeatures.push(feature);
-            //         }
-            //     }
-            //     return matchingFeatures;
-            // }
-
-            // function renderGeocoder(query) {
-            //     let matched = false;
-            //     for (var i = 0; i < self.state.dataFeatures.length; i++) {
-            //         var feature = self.state.dataFeatures[i];
-            //         // handle queries with different capitalization than the source data by calling toLowerCase()
-            //         if (feature.properties.title.toLowerCase().search(query.place_name.toLowerCase()) !== -1) {
-            //             // add a tree emoji as a prefix for custom data results
-            //             // using carmen geojson format: https://github.com/mapbox/carmen/blob/master/carmen-geojson.md
-            //             matched = true;
-            //             break;
-            //         }
-            //     }
-            //     if(matched){
-            //         return "<div class='geocoder-dropdown-item'><span class='geocoder-dropdown-text'>" + feature.properties.title + "</span></div>";
-            //     }
-            //     else{
-            //         return "<div class='geocoder-dropdown-item' style='display:none;'></div>";
-            //     }
-            // }
-                 
-            // self.map.addControl(new window.MapboxGeocoder({
-            //     accessToken: window.mapboxgl.accessToken,
-            //     localGeocoder: forwardGeocoder,
-            //     zoom: 14,
-            //     render: renderGeocoder,
-            //     placeholder: "Enter search e.g. Home",
-            //     mapboxgl: window.mapboxgl
-            // }));
-            // self.state.draw = new window.MapboxDraw({
-            //     displayControlsDefault: false,
-            //     controls: {
-            //         circle: true,
-            //         trash: true
-            //     }
-            // });
             
         });
 
@@ -238,38 +190,18 @@ class PointUsingSDk extends Component {
             //     .addTo(self.map));
             //    // map.setFilter(layerID, ['in', 'title', dataSource[index]['properties']['title']]);
             // }
-           
-            var features = self.map.querySourceFeatures("map_test_dataset",{sourceLayer:"new_dataset"});
-            //var features = self.map.queryRenderedFeatures({ layers: ['real_estate'] });
-                 
-            if (features) {
-            // Populate features for the listing overlay.
-            //self.renderListings(features);
-             
-            // Clear the input container
-            //self.filterInput.value = '';
-             
-            // Store the current features in sn `airports` variable to
-            // later use for filtering on `keyup`.
-            self.props.setDataFeatures({data_features:features});
-            }
-            
+            self.activeSidebar();
+            let features = [];
+            axios.get("https://api.mapbox.com/datasets/v1/chintansoni1/cjvc66bop17sa2wo0b3iiadyg/features?access_token=pk.eyJ1IjoiY2hpbnRhbnNvbmkxIiwiYSI6ImNqdmMxOHh1MzFkeWk0NG15bWJlbDYwN2sifQ.MT1hxtqXFw4QAXZ8MyfzCQ").then((result)=>{
+                features = result.data.features;
+                if (features) {
+                    self.props.setDataFeatures({data_features:features});
+                }
+            })
             
             if(Object.entries(self.props.map).length === 0 && self.props.map.constructor === Object){
                 self.props.initializeMap({map:self.map});
             }
-            else{
-                var draw = new window.MapboxDraw({
-                    displayControlsDefault: false,
-                    controls: {
-                    polygon: true,
-                    trash: true
-                    }
-                });
-                self.props.map.addControl(draw);
-                //console.log(self.map,self.props.map,self.compare({a:"a",b:{c:"c"}},{a:"a",b:{c:"c"}}));
-            }
-            
         });
         
         
