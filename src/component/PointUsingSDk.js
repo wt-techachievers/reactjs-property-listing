@@ -6,13 +6,45 @@ import { initializeMap, setDataFeatures } from '../action/index';
 import axios from 'axios';
 
 import { ClipLoader } from 'react-spinners';
-import {MDBBtn} from 'mdbreact';
+import {MDBBtn, MDBNavLink} from 'mdbreact';
 
 class PointUsingSDk extends Component {
     state={
         popup: new window.mapboxgl.Popup({
             closeButton: false
-        })
+        }),
+        modal6: false,
+        modal7: false,
+        data: {
+            columns: [
+              {
+                label: 'Title',
+                field: 'title',
+                sort: 'asc'
+              },
+              {
+                label: 'Description',
+                field: 'description',
+                sort: 'asc'
+              },
+              {
+                label: 'City',
+                field: 'city',
+                sort: 'asc'
+              },
+              {
+                label: 'State',
+                field: 'state',
+                sort: 'asc'
+              },
+              {
+                label: 'Address',
+                field: 'address',
+                sort: 'asc'
+              }
+            ],
+            rows: []
+        }
     }
 
     // renderListings = (features) => {
@@ -219,7 +251,9 @@ class PointUsingSDk extends Component {
                         </fieldset>
                         <div id='feature-listing' className='listing'></div>
                     </div> */}
-                    <MDBBtn color="primary" style={ {position:'absolute', top:"10%", right:"4%"}} >Filter</MDBBtn>
+                    <MDBBtn color="primary" style={ {position:'absolute', top:"10%", right:"4%"}} >
+                        <MDBNavLink to="/popup_table">Filter</MDBNavLink>
+                    </MDBBtn>
                     <div className='calculation-box'>
                         <div id='calculated-area'></div>
                     </div>

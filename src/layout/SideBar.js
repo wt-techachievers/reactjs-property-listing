@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 import { MDBListGroup, MDBListGroupItem, MDBIcon } from 'mdbreact';
 import { connect } from 'react-redux';
 import { CircleMode, DirectMode, SimpleSelectMode } from 'mapbox-gl-draw-circle';
+import { setFilteredFeatures } from '../action/index';
+import PropTypes from 'prop-types';
 
 class Sidebar extends Component {
     state={
@@ -10,21 +12,22 @@ class Sidebar extends Component {
     updateArea = (e) => {
         
         var data = this.state.draw.getAll();
-        var answer = document.getElementById('calculated-area');
+        //var answer = document.getElementById('calculated-area');
         if (data.features.length > 0) {
             var area = window.turf.area(data);
             let features_inside_circle = [];
             for(let feature of this.props.data_features){
                 let inside_circle = window.turf.inside(window.turf.point(feature.geometry.coordinates),data.features[0]);
                 if(inside_circle){
-                    features_inside_circle.push(feature.properties.title);
+                    features_inside_circle.push(feature.properties);
                 }
             }
+            this.props.setFilteredFeatures({filtered_features:features_inside_circle});
             // restrict to area to 2 decimal points
-            var rounded_area = Math.round(area*100)/100;
-            answer.innerHTML = '<p><strong>Points inside circle- ' +features_inside_circle+ '</strong>';
+            //var rounded_area = Math.round(area*100)/100;
+            //answer.innerHTML = '<p><strong>Points inside circle- ' +features_inside_circle+ '</strong>';
         } else {
-            answer.innerHTML = '';
+            //answer.innerHTML = '';
             if (e.type !== 'draw.delete') alert("Use the draw tools to draw a polygon!");
         }
     }
@@ -316,6 +319,11 @@ class Sidebar extends Component {
     )
   }
 }
+
+Sidebar.propTypes = {
+  setFilteredFeatures: PropTypes.func.isRequired
+}
+
 const mapStateToProps = (state) => ({
     map: state.map,
     data_features: state.data_features
@@ -323,5 +331,5 @@ const mapStateToProps = (state) => ({
  
 export default connect(
     mapStateToProps,
-    {  }
+    { setFilteredFeatures }
 )(Sidebar);

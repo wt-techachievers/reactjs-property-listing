@@ -32,6 +32,21 @@
   }
 }
 
+.modal{
+  position: inherit;
+  top:inherit;
+  left: inherit;
+  margin-top: 0;
+}
+
+.modal-dialog{
+  max-width:inherit;
+}
+
+.modal-content{
+  padding:5px;
+}
+
 
 /* .map-overlay {
   position: absolute;

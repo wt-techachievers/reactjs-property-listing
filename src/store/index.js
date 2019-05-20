@@ -5,7 +5,8 @@ import rootReducer from "../reducer/index";
 
 const initialState = {
     map:{},
-    data_features: []
+    data_features: [],
+    filterd_features: []
 };
 
 const middleware = [thunk];
