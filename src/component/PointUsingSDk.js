@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 // First way to import
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { initializeMap, setDataFeatures } from '../action/index';
+import { initializeMap, setDataFeatures, setDraw } from '../action/index';
 import axios from 'axios';
 
 import { ClipLoader } from 'react-spinners';
@@ -12,39 +12,7 @@ class PointUsingSDk extends Component {
     state={
         popup: new window.mapboxgl.Popup({
             closeButton: false
-        }),
-        modal6: false,
-        modal7: false,
-        data: {
-            columns: [
-              {
-                label: 'Title',
-                field: 'title',
-                sort: 'asc'
-              },
-              {
-                label: 'Description',
-                field: 'description',
-                sort: 'asc'
-              },
-              {
-                label: 'City',
-                field: 'city',
-                sort: 'asc'
-              },
-              {
-                label: 'State',
-                field: 'state',
-                sort: 'asc'
-              },
-              {
-                label: 'Address',
-                field: 'address',
-                sort: 'asc'
-              }
-            ],
-            rows: []
-        }
+        })
     }
 
     // renderListings = (features) => {
@@ -239,6 +207,11 @@ class PointUsingSDk extends Component {
         
     }
 
+    componentWillUnmount(){
+        this.props.initializeMap({map:{}});
+        this.props.setDraw({draw:undefined});
+    }
+
 
     render() {
         if(this.props.map){
@@ -251,9 +224,7 @@ class PointUsingSDk extends Component {
                         </fieldset>
                         <div id='feature-listing' className='listing'></div>
                     </div> */}
-                    <MDBBtn color="primary" style={ {position:'absolute', top:"10%", right:"4%"}} >
-                        <MDBNavLink to="/popup_table">Filter</MDBNavLink>
-                    </MDBBtn>
+                    <MDBNavLink id="filter_btn"  className="btn btn-primary filter-btn" to="/popup_table">Filter</MDBNavLink>
                     <div className='calculation-box'>
                         <div id='calculated-area'></div>
                     </div>
@@ -283,15 +254,17 @@ class PointUsingSDk extends Component {
 PointUsingSDk.propTypes = {
     map: PropTypes.object.isRequired,
     initializeMap: PropTypes.func.isRequired,
-    setDataFeatures: PropTypes.func.isRequired
+    setDataFeatures: PropTypes.func.isRequired,
+    setDraw: PropTypes.func.isRequired
 }
 
 const mapStateToProps = (state) => ({
     map: state.map,
-    data_features: state.data_features
+    data_features: state.data_features,
+    draw: state.draw
 });
  
 export default connect(
     mapStateToProps,
-    { initializeMap, setDataFeatures }
+    { initializeMap, setDataFeatures, setDraw }
 )(PointUsingSDk);

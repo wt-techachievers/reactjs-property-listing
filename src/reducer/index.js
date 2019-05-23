@@ -1,9 +1,10 @@
-import { INITIALIZE_MAP, SET_DATA_FEATURES, SET_FILTERED_FEATURES } from "../constant/mapAction";
+import { INITIALIZE_MAP, SET_DATA_FEATURES, SET_FILTERED_FEATURES, SET_DRAW } from "../constant/mapAction";
 
 const initialState = {
     map: {},
     data_features: [],
-    filtered_features: []
+    filtered_features: [],
+    draw:undefined
 };
 
 function rootReducer(state = initialState, action) {
@@ -19,6 +20,10 @@ function rootReducer(state = initialState, action) {
       case SET_FILTERED_FEATURES: return{
         ...state,
         filtered_features: action.payload.filtered_features
+      }
+      case SET_DRAW: return{
+        ...state,
+        draw: action.payload.draw
       }
       default: return state;
   }

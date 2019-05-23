@@ -47,6 +47,15 @@ class TableList extends Component {
         });
     }
 
+    componentDidMount(){
+      let sidebarUl = document.getElementsByClassName("list-group-flush")[0];
+      sidebarUl.style.display = "none";
+      let activeElement = sidebarUl.querySelector(".active");
+      if(activeElement){
+        activeElement.classList.remove("active");
+      }
+    }
+
     render() {
         return (
             <MDBDataTable

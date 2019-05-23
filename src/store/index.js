@@ -6,7 +6,8 @@ import rootReducer from "../reducer/index";
 const initialState = {
     map:{},
     data_features: [],
-    filterd_features: []
+    filterd_features: [],
+    draw:undefined
 };
 
 const middleware = [thunk];

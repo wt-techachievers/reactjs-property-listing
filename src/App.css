@@ -47,6 +47,13 @@
   padding:5px;
 }
 
+.filter-btn{
+  position: absolute !important;
+  top: 10%;
+  right: 4%;
+  display: none;
+}
+
 
 /* .map-overlay {
   position: absolute;
